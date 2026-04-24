@@ -12,7 +12,6 @@ test('user can login and load own profile via api', function () {
     $this->postJson('/api/auth/login', [
         'login' => 'demo_user',
         'password' => 'secret-pass',
-        'remember' => true,
     ])
         ->assertOk()
         ->assertJsonPath('data.id', $user->id)

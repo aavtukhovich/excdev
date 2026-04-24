@@ -34,12 +34,12 @@ export function useAuthStore() {
         }
     }
 
-    async function login(login: string, password: string, remember: boolean): Promise<void> {
+    async function login(login: string, password: string): Promise<void> {
         await ensureCsrfCookie();
 
         const payload = await apiRequest<{ data: AuthenticatedUser }>('/api/auth/login', {
             method: 'POST',
-            body: { login, password, remember },
+            body: { login, password },
         });
 
         state.user = payload.data;

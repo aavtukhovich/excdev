@@ -9,6 +9,7 @@ import type { DashboardPayload, OperationItem } from '@/types/api';
 
 const loading = ref(false);
 const dashboard = ref<DashboardPayload | null>(null);
+let refreshTimerId: number | null = null;
 
 function formatDate(value: string | null): string {
     if (value === null) {
@@ -40,6 +41,14 @@ async function loadDashboard(): Promise<void> {
             '/api/dashboard',
         );
         dashboard.value = payload.data;
+
+        if (refreshTimerId !== null) {
+            window.clearInterval(refreshTimerId);
+        }
+
+        refreshTimerId = window.setInterval(() => {
+            void loadDashboard();
+        }, Math.max(payload.data.refresh_interval_seconds, 2) * 1000);
     } finally {
         loading.value = false;
     }
@@ -47,6 +56,12 @@ async function loadDashboard(): Promise<void> {
 
 onMounted(() => {
     void loadDashboard();
+});
+
+onUnmounted(() => {
+    if (refreshTimerId !== null) {
+        window.clearInterval(refreshTimerId);
+    }
 });
 </script>
 
@@ -62,7 +77,10 @@ onMounted(() => {
                             >Текущий баланс</small
                         >
                         <div class="money-value">
-                            {{ dashboard?.balance.current_formatted ?? '0.00' }}
+                            {{
+                                dashboard?.balance.current_formatted ??
+                                Number(dashboard?.balance.current ?? 0).toFixed(2)
+                            }}
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -122,17 +140,36 @@ onMounted(() => {
                                 :key="operation.id"
                             >
                                 <td>{{ formatDate(operation.date) }}</td>
-                                <td>{{ operation.type_label }}</td>
+                                <td>
+                                    {{
+                                        operation.type_label ??
+                                        (operation.type === 'debit'
+                                            ? 'Списание'
+                                            : 'Начисление')
+                                    }}
+                                </td>
                                 <td class="text-break">
                                     {{ operation.description }}
                                 </td>
-                                <td>{{ operation.amount_formatted }}</td>
+                                <td>
+                                    {{
+                                        operation.amount_formatted ??
+                                        Number(operation.amount).toFixed(2)
+                                    }}
+                                </td>
                                 <td>
                                     <span
                                         class="badge"
                                         :class="statusClass(operation)"
                                     >
-                                        {{ operation.status_label }}
+                                        {{
+                                            operation.status_label ??
+                                            (operation.status === 'rejected'
+                                                ? 'Отклонена'
+                                                : operation.status === 'completed'
+                                                  ? 'Проведена'
+                                                  : 'В очереди')
+                                        }}
                                     </span>
                                 </td>
                             </tr>

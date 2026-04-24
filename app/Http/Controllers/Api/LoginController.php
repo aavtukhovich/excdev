@@ -21,7 +21,6 @@ class LoginController extends Controller
                 request: $request,
                 login: $request->validated('login'),
                 password: $request->validated('password'),
-                remember: (bool) $request->validated('remember', false),
             );
         } catch (AuthenticationException) {
             throw ValidationException::withMessages([

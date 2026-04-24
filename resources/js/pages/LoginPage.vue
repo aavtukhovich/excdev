@@ -10,7 +10,6 @@ const auth = useAuthStore();
 
 const login = ref('');
 const password = ref('');
-const remember = ref(true);
 const formError = ref('');
 const loading = ref(false);
 
@@ -19,7 +18,7 @@ async function submit(): Promise<void> {
     loading.value = true;
 
     try {
-        await auth.login(login.value, password.value, remember.value);
+        await auth.login(login.value, password.value);
         await router.push({ name: 'dashboard' });
     } catch (error) {
         if (error instanceof ApiError) {
@@ -65,18 +64,6 @@ async function submit(): Promise<void> {
                         autocomplete="current-password"
                         required
                     />
-                </div>
-
-                <div class="form-check">
-                    <input
-                        id="remember"
-                        v-model="remember"
-                        type="checkbox"
-                        class="form-check-input"
-                    />
-                    <label class="form-check-label" for="remember"
-                        >Запомнить меня</label
-                    >
                 </div>
 
                 <div v-if="formError" class="alert alert-danger mb-0 py-2">

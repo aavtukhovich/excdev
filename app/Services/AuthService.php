@@ -18,14 +18,14 @@ class AuthService
     /**
      * @throws AuthenticationException
      */
-    public function login(Request $request, string $login, string $password, bool $remember = false): User
+    public function login(Request $request, string $login, string $password): User
     {
         $credentials = [
             'login' => Str::lower(trim($login)),
             'password' => $password,
         ];
 
-        if (! $this->auth->guard('web')->attempt($credentials, $remember)) {
+        if (! $this->auth->guard('web')->attempt($credentials, true)) {
             throw new AuthenticationException('Неверный логин или пароль.');
         }
 

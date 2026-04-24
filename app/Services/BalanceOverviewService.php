@@ -26,7 +26,7 @@ class BalanceOverviewService
         return [
             'balance' => $balance,
             'recent_operations' => $recentOperations,
-            'refresh_interval_seconds' => 10,
+            'refresh_interval_seconds' => (int) config('balance.refresh_interval_seconds', 10),
             'refreshed_at' => now(),
         ];
     }

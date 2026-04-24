@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 import MainLayout from '@/layouts/MainLayout.vue';
 import { apiRequest } from '@/lib/http';
@@ -14,8 +14,10 @@ const links = ref<PaginationLink[]>([]);
 const meta = ref<PaginationMeta | null>(null);
 const loading = ref(false);
 const loadError = ref('');
+const search = ref('');
 const sort = ref<'desc' | 'asc'>('desc');
 const page = ref(1);
+let searchDebounceId: number | null = null;
 
 function formatDate(value: string | null | undefined): string {
     if (value === null || value === undefined) {
@@ -106,6 +108,10 @@ async function loadOperations(): Promise<void> {
             per_page: '15',
         });
 
+        if (search.value.trim() !== '') {
+            query.set('search', search.value.trim());
+        }
+
         const payload = await apiRequest<{
             data: OperationItem[];
             meta: PaginationMeta & { links?: PaginationLink[] };
@@ -142,8 +148,25 @@ watch(sort, () => {
     void loadOperations();
 });
 
+watch(search, () => {
+    if (searchDebounceId !== null) {
+        window.clearTimeout(searchDebounceId);
+    }
+
+    searchDebounceId = window.setTimeout(() => {
+        page.value = 1;
+        void loadOperations();
+    }, 300);
+});
+
 onMounted(() => {
     void loadOperations();
+});
+
+onUnmounted(() => {
+    if (searchDebounceId !== null) {
+        window.clearTimeout(searchDebounceId);
+    }
 });
 </script>
 
@@ -163,6 +186,18 @@ onMounted(() => {
             </div>
 
             <div class="row g-2 mb-3">
+                <div class="col-12 col-md-9">
+                    <label class="form-label" for="search-field"
+                        >Поиск по описанию</label
+                    >
+                    <input
+                        id="search-field"
+                        v-model.trim="search"
+                        type="text"
+                        class="form-control"
+                        placeholder="Например: премия"
+                    />
+                </div>
                 <div class="col-12 col-md-3">
                     <label class="form-label" for="sort-field"
                         >Сортировка по дате</label
